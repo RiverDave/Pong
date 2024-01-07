@@ -1,7 +1,7 @@
 use sdl2::rect;
 
-const STANDARD_DIR: i8 = 0;
-const STANDARD_SPEED: u32 = 10;
+// const STANDARD_DIR: i8 = 0;
+pub const STANDARD_SPEED: u32 = 30;
 pub const SL_HEIGHT: u32 = 180;
 pub const SL_WIDTH: u32 = 20;
 
@@ -14,7 +14,7 @@ pub struct Slide {
     pub sy: i32,
     pub sheight: u32,
     pub swidth: u32,
-    pub dir: i8,
+    pub dir: i32,
     pub speed: u32,
     pub rect: sdl2::rect::Rect,
 }
