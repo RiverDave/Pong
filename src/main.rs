@@ -51,6 +51,11 @@ fn game_init() {
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
+    //ball thingy
+
+    // let ball_speed_x = 7;
+    // let ball_speed_y = 0;
+
     'running: loop {
         canvas.set_draw_color(cb);
         canvas.clear();
@@ -60,7 +65,8 @@ fn game_init() {
         color_rect(p2.rect, &mut canvas, cw);
         color_rect(ball.rect, &mut canvas, cw);
 
-        handle_ball_mov(&mut ball);
+        // handle_ball_mov(&mut ball);
+        ball.handle_bounds_col();
 
         for event in event_pump.poll_iter() {
             match event {
@@ -84,7 +90,7 @@ fn game_init() {
 
         // Update the canvas
         canvas.present();
-        // ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }
 
@@ -104,25 +110,25 @@ fn handle_slide_mov_y_1(slide: &mut slide::Slide, event: &Event, player_num: u8)
             keycode: Some(Keycode::W),
             ..
         } => {
-            slide.dir = -1; // Move up when 'W' is pressed
+            slide.dir_y = -1; // Move up when 'W' is pressed
         }
         Event::KeyDown {
             keycode: Some(Keycode::S),
             ..
         } => {
-            slide.dir = 1; // Move down when 'S' is pressed
+            slide.dir_y = 1; // Move down when 'S' is pressed
         }
         Event::KeyUp {
             keycode: Some(Keycode::W) | Some(Keycode::S),
             ..
         } => {
-            slide.dir = 0; // Stop movement when 'W' or 'S' is released
+            slide.dir_y = 0; // Stop movement when 'W' or 'S' is released
         }
         _ => {}
     }
 
     // Calculate new position based on direction and boundaries
-    let new_pos = slide.sy as i32 + slide.speed as i32 * slide.dir as i32;
+    let new_pos = slide.sy as i32 + slide.speed as i32 * slide.dir_y as i32;
 
     if new_pos < 0 {
         slide.sy = 0;
@@ -136,31 +142,30 @@ fn handle_slide_mov_y_1(slide: &mut slide::Slide, event: &Event, player_num: u8)
 }
 
 fn handle_slide_mov_y_2(slide: &mut slide::Slide, event: &Event, player_num: u8) {
-    println!("p1 {}", slide.speed);
     match event {
         Event::KeyDown {
             keycode: Some(Keycode::K),
             ..
         } => {
-            slide.dir = -1; // Move up when 'W' is pressed
+            slide.dir_y = -1; // Move up when 'W' is pressed
         }
         Event::KeyDown {
             keycode: Some(Keycode::J),
             ..
         } => {
-            slide.dir = 1; // Move down when 'S' is pressed
+            slide.dir_y = 1; // Move down when 'S' is pressed
         }
         Event::KeyUp {
             keycode: Some(Keycode::J) | Some(Keycode::K),
             ..
         } => {
-            slide.dir = 0; // Stop movement when 'W' or 'S' is released
+            slide.dir_y = 0; // Stop movement when 'W' or 'S' is released
         }
         _ => {}
     }
 
     // Calculate new position based on direction and boundaries
-    let new_pos = slide.sy as i32 + STANDARD_SPEED as i32 * slide.dir as i32;
+    let new_pos = slide.sy as i32 + STANDARD_SPEED as i32 * slide.dir_y as i32;
 
     if new_pos < 0 {
         slide.sy = 0;
@@ -174,7 +179,26 @@ fn handle_slide_mov_y_2(slide: &mut slide::Slide, event: &Event, player_num: u8)
 }
 
 fn handle_ball_mov(ball: &mut slide::Slide){
-    todo!();
+
+    let new_pos_x = ball.sx + ball.sy as i32 + STANDARD_SPEED as i32 * ball.dir_y as i32;
+
+    // if new_pos_x < 0 {
+    //     ball.dir = 1;
+    // } else if new_pos_x + SL_WIDTH as i32 > SCREEN_WIDTH as i32 {
+    //     ball.dir = -1;
+    // } else {
+    //     ball.sx = new_pos_x;
+    // }
+
+    if new_pos_x < 0 {
+        ball.dir_y = 1;
+    } else if new_pos_x + SL_HEIGHT as i32 > SCREEN_HEIGHT as i32 {
+        ball.dir_y = -1;
+    } else {
+        ball.sx = new_pos_x;
+    }
+
+    ball.rect = sdl2::rect::Rect::new(ball.sx, ball.sy, ball.swidth, ball.sheight);
 }
 
 fn main() {
