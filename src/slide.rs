@@ -1,3 +1,4 @@
+use rand::Rng;
 use sdl2::rect;
 
 use crate::{SCREEN_HEIGHT, SCREEN_WIDTH};
@@ -50,7 +51,8 @@ impl Slide {
     }
     //function may be inncecessary, since the canvas could also perform this in the init func
 
-    pub fn handle_bounds_col(&mut self) {
+    //TODO: rework the direction change
+    pub fn handle_bounds_col(&mut self, p1: &Slide, p2: &Slide) {
         let delta_x = 7;
         let delta_y = 7;
 
@@ -59,36 +61,55 @@ impl Slide {
         //for example if the ball hits the bottom right side of the screen , it will change direction to the right
         //but the y axis will be inverted obviously as it should.
 
-        let half_screen_x = SCREEN_HEIGHT as i32 / 2;
+        // let half_screen_x = SCREEN_HEIGHT as i32 / 2;
         let half_screen_y = SCREEN_WIDTH as i32 / 2;
 
         //upper bound collision
         if self.sy + delta_y + BALL_HEIGHT as i32 > SCREEN_HEIGHT as i32 {
             if self.sx > half_screen_y {
-                println!("Not guilty");
                 self.dir_y = -1;
                 self.dir_x = 1;
-            }else {
-                println!("Definetly maybe");
+            } else {
                 self.dir_y = -1;
                 self.dir_x = -1;
             }
-        } 
+        }
 
         //lower bound collision
         if self.sy + delta_y < 0 {
-            if  self.sx > half_screen_y {
-
+            if self.sx > half_screen_y {
                 self.dir_y = 1;
                 self.dir_x = 1;
             } else {
-
                 self.dir_y = 1;
                 self.dir_x = -1;
             }
         }
 
-        //TODO: Pad collision
+
+        if self.check_collision(&p1) {
+            if self.sy < (self.sheight / 2) as i32 {
+                println!("UP");
+                self.dir_x = -1;
+                self.dir_y = 1;
+            } else {
+                println!("Down");
+                self.dir_x = 1;
+                self.dir_y = -1;
+            }
+        }
+
+        if self.check_collision(&p2) {
+            if self.sy < (self.sheight / 2) as i32 {
+
+                self.dir_x = -1;
+                self.dir_y = -1;
+            } else {
+
+                self.dir_x = -1;
+                self.dir_y = 1;
+            }
+        }
 
         self.sx += delta_x * self.dir_x;
         self.sy += delta_y * self.dir_y;
@@ -96,51 +117,54 @@ impl Slide {
         self.rect = rect::Rect::new(self.sx, self.sy, self.swidth, self.sheight);
     }
 
-    // pub fn handle_bounds_col(&mut self, delta_x: i32, delta_y: i32) {
-    //     // Update the ball's position based on its current speed and direction
-    //     let mut new_pos_x = self.sx + delta_x * self.dir;
-    //     let mut new_pos_y = self.sy + delta_y * self.dir;
-    //
-    //     // Check for collisions with horizontal boundaries
-    //     if new_pos_x + self.swidth as i32 > SCREEN_WIDTH as i32 || new_pos_x < 0 {
-    //         // If the collision is near the center of the screen
-    //         let half_screen = SCREEN_WIDTH as i32 / 2;
-    //         if (self.sx < half_screen && new_pos_x >= half_screen)
-    //             || (self.sx > half_screen && new_pos_x <= half_screen)
-    //         {
-    //             // Reverse the horizontal direction
-    //             self.dir *= -1;
-    //         } else {
-    //             // Perform regular horizontal collision logic
-    //             self.dir *= 1; // Or any other necessary logic based on your game
-    //         }
-    //
-    //         // Calculate the new x position to prevent going beyond boundaries
-    //         new_pos_x = if new_pos_x + self.swidth as i32 > SCREEN_WIDTH as i32 {
-    //             SCREEN_WIDTH as i32 - self.swidth as i32
-    //         } else {
-    //             0
-    //         };
-    //     }
-    //
-    //     // Check for collisions with vertical boundaries
-    //     if new_pos_y + self.sheight as i32 > SCREEN_HEIGHT as i32 || new_pos_y < 0 {
-    //         // Reverse the vertical direction upon collision
-    //         self.dir *= -1;
-    //
-    //         // Calculate the new y position to prevent going beyond boundaries
-    //         new_pos_y = if new_pos_y + self.sheight as i32 > SCREEN_HEIGHT as i32 {
-    //             SCREEN_HEIGHT as i32 - self.sheight as i32
-    //         } else {
-    //             0
-    //         };
-    //     }
-    //
-    //     // Update the ball's position
-    //     self.sx = new_pos_x;
-    //     self.sy = new_pos_y;
-    //
-    //     // Update the ball's rectangle
-    //     self.rect = rect::Rect::new(self.sx, self.sy, self.swidth, self.sheight);
-    // }
+    fn check_collision(&mut self, pad: &Slide) -> bool {
+        // Calculate the sides of the ball
+        let ball_left = self.sx;
+        let ball_right = self.sx + self.swidth as i32;
+        let ball_top = self.sy;
+        let ball_bottom = self.sy + self.sheight as i32;
+
+        // Calculate the sides of the pad
+        let pad_left = pad.sx;
+        let pad_right = pad.sx + pad.swidth as i32;
+        let pad_top = pad.sy;
+        let pad_bottom = pad.sy + pad.sheight as i32;
+
+        // Check for collision
+        if ball_right >= pad_left
+            && ball_left <= pad_right
+            && ball_bottom >= pad_top
+            && ball_top <= pad_bottom
+        {
+            // Collision detected
+            return true;
+        }
+
+        // No collision
+        false
+    }
+
+    // brings ball back to the center
+    pub fn ball_debug(&mut self) {
+        let new_dir_x: i32;
+        let new_dir_y: i32;
+
+        let mut rng = rand::thread_rng();
+        let rand_bool_x: bool = rng.gen();
+        let rand_bool_y: bool = rng.gen();
+
+        if self.sx > SCREEN_WIDTH as i32 || self.sx < 0 {
+            self.sx = (SCREEN_WIDTH as i32 - SL_WIDTH as i32) / 2;
+            self.sy = (SCREEN_HEIGHT as i32 - SL_HEIGHT as i32) / 2;
+
+            //notice how expressions are sorrounded by curly brackets:  {}
+            new_dir_x = if rand_bool_x { -1 } else { 1 };
+            new_dir_y = if rand_bool_y { -1 } else { 1 };
+
+            self.dir_x = new_dir_x;
+            self.dir_y = new_dir_y;
+        }
+
+        self.rect = rect::Rect::new(self.sx, self.sy, self.swidth, self.sheight);
+    }
 }

@@ -10,12 +10,12 @@ use std::time::Duration;
 use crate::slide::STANDARD_SPEED;
 
 //mac values
-const SCREEN_WIDTH: u32 = 800;
-const SCREEN_HEIGHT: u32 = 600;
+// const SCREEN_WIDTH: u32 = 800;
+// const SCREEN_HEIGHT: u32 = 600;
 
 //linux values
-// const SCREEN_WIDTH: u32 = 1400;
-// const SCREEN_HEIGHT: u32 = 1200;
+const SCREEN_WIDTH: u32 = 1400;
+const SCREEN_HEIGHT: u32 = 1200;
 fn game_init() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -66,7 +66,9 @@ fn game_init() {
         color_rect(ball.rect, &mut canvas, cw);
 
         // handle_ball_mov(&mut ball);
-        ball.handle_bounds_col();
+        ball.handle_bounds_col(&p1, &p2);
+        ball.ball_debug(); 
+        
 
         for event in event_pump.poll_iter() {
             match event {
