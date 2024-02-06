@@ -19,7 +19,7 @@ pub struct Slide {
     pub swidth: u32,
     pub dir_y: i32,
     pub dir_x: i32,
-    pub speed: u32,
+    pub speed: u32, //used specifically in slides(player entitys)
     pub rect: sdl2::rect::Rect,
 }
 
@@ -50,70 +50,68 @@ impl Slide {
         }
     }
     //function may be inncecessary, since the canvas could also perform this in the init func
+    // MEANS: Function doesn't neccessarily need to be a method/implementation in slide
 
-    //TODO: rework the direction change
     pub fn handle_bounds_col(&mut self, p1: &Slide, p2: &Slide) {
         let delta_x = 7;
         let delta_y = 7;
 
-        //the condition below works if delta_x has a value and delta_y has not
-        //each boundarie of the screen shall be divided by 2, and if the ball hits one side, it will change direction
-        //for example if the ball hits the bottom right side of the screen , it will change direction to the right
-        //but the y axis will be inverted obviously as it should.
-
-        // let half_screen_x = SCREEN_HEIGHT as i32 / 2;
-        let half_screen_y = SCREEN_WIDTH as i32 / 2;
-
-        //upper bound collision
-        if self.sy + delta_y + BALL_HEIGHT as i32 > SCREEN_HEIGHT as i32 {
-            if self.sx > half_screen_y {
-                self.dir_y = -1;
-                self.dir_x = 1;
-            } else {
-                self.dir_y = -1;
-                self.dir_x = -1;
-            }
-        }
+        let half_screen_w = SCREEN_WIDTH as i32 / 2;
 
         //lower bound collision
+        if self.sy + delta_y + BALL_HEIGHT as i32 > SCREEN_HEIGHT as i32 {
+            //greater than sw, so if it hit down
+            if self.sx > half_screen_w {
+                // println!("COLLISION | Down right");
+                self.dir_y *= -1;
+            } else {
+                // println!("COLLISION | Down Left");
+                self.dir_y *= -1;
+            }
+        }
+
+        //upper bound collision
         if self.sy + delta_y < 0 {
-            if self.sx > half_screen_y {
-                self.dir_y = 1;
-                self.dir_x = 1;
+            if self.sx > half_screen_w {
+                // println!("COLLISION | Up Right");
+                self.dir_y *= -1;
             } else {
-                self.dir_y = 1;
-                self.dir_x = -1;
+                // println!("COLLISION | Up Left");
+                self.dir_y *= -1;
             }
         }
 
-
+        //left pad collision
         if self.check_collision(&p1) {
-            if self.sy < (self.sheight / 2) as i32 {
-                println!("UP");
-                self.dir_x = -1;
+            println!("Collision with left pad(p1)");
+            if self.sy > p1.sy + (p1.sheight / 2) as i32 {
+                println!("PAD p1 COLLISION | Down");
+                self.dir_x = 1;
                 self.dir_y = 1;
             } else {
-                println!("Down");
+                println!("PAD p1 COLLISION | Up");
                 self.dir_x = 1;
                 self.dir_y = -1;
             }
         }
-
+        //right pad collision
         if self.check_collision(&p2) {
-            if self.sy < (self.sheight / 2) as i32 {
-
-                self.dir_x = -1;
-                self.dir_y = -1;
-            } else {
-
+            if self.sy > p2.sy + (p2.sheight / 2) as i32 {
+                println!("PAD p2 COLLISION | Down");
                 self.dir_x = -1;
                 self.dir_y = 1;
+            } else {
+                println!("PAD p2 COLLISION | Up");
+                self.dir_x = -1;
+                self.dir_y = -1;
             }
         }
 
+        //speed stuff
         self.sx += delta_x * self.dir_x;
         self.sy += delta_y * self.dir_y;
 
+        //re-render entity
         self.rect = rect::Rect::new(self.sx, self.sy, self.swidth, self.sheight);
     }
 
@@ -121,7 +119,7 @@ impl Slide {
         // Calculate the sides of the ball
         let ball_left = self.sx;
         let ball_right = self.sx + self.swidth as i32;
-        let ball_top = self.sy;
+        let ball_top = self.sy; //really not necessary, ball is probs never gonna collide there
         let ball_bottom = self.sy + self.sheight as i32;
 
         // Calculate the sides of the pad
@@ -141,14 +139,16 @@ impl Slide {
         }
 
         // No collision
-        false
+        return false;
     }
 
     // brings ball back to the center
-    pub fn ball_debug(&mut self) {
+    pub fn ball_score(&mut self) {
         let new_dir_x: i32;
         let new_dir_y: i32;
 
+
+        //Generate random directions
         let mut rng = rand::thread_rng();
         let rand_bool_x: bool = rng.gen();
         let rand_bool_y: bool = rng.gen();
