@@ -15,7 +15,7 @@ use crate::slide::STANDARD_SPEED;
 //linux values, in a 27' inch screen
 const SCREEN_WIDTH: u32 = 900;
 const SCREEN_HEIGHT: u32 = 1400;
-fn game_init() {
+fn game_init() -> Result<(), String> {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
 
@@ -92,6 +92,7 @@ fn game_init() {
         canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
+    Ok(())
 }
 
 fn draw_line(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, color: sdl2::pixels::Color) {
@@ -188,6 +189,15 @@ fn handle_slide_mov_y_2(slide: &mut slide::Slide, event: &Event) {
     slide.rect = sdl2::rect::Rect::new(slide.sx, slide.sy, slide.swidth, slide.sheight);
 }
 
-fn main() {
-    game_init();
+fn main() -> Result<(), String> {
+    match game_init() {
+        Ok(_) => {
+            println!("Success at game_init()");
+        }
+        Err(err) => {
+            eprintln!("Error on game_init() {}", err);
+            return Err(err);
+        }
+    }
+    Ok(())
 }
